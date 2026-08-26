@@ -10,4 +10,3 @@ Initial public release.
 
 Download the ZIP, verify its SHA-256 file and extract it into Chatterino's
 `Plugins` directory as `chatterino-kick-chat`.
-

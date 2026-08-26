@@ -37,4 +37,3 @@ jobs:
             --notes-file docs/release-notes.md \
             "dist/chatterino-kick-chat-$VERSION.zip" \
             "dist/chatterino-kick-chat-$VERSION.zip.sha256"
-

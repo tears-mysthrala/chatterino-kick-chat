@@ -48,4 +48,3 @@ jobs:
           path: |
             dist/chatterino-kick-chat-0.1.0.zip
             dist/chatterino-kick-chat-0.1.0.zip.sha256
-
