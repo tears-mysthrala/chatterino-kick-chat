@@ -33,9 +33,10 @@ function State.write(state)
   target:write(encoded); target:flush(); target:close(); return true
 end
 
-function State.bind(state, slug, chatroom_id, split)
+function State.bind(state, slug, chatroom_id, split, stream_id)
   local entry = state.channels[slug] or { slug = slug, splits = {}, paused = false }
   entry.chatroom_id = tonumber(chatroom_id)
+  entry.stream_id = stream_id and tostring(stream_id) or nil
   for _, value in ipairs(entry.splits) do if value == split then state.channels[slug] = entry; return entry end end
   entry.splits[#entry.splits + 1] = split; state.channels[slug] = entry; return entry
 end

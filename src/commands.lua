@@ -14,7 +14,10 @@ local function add(state, ctx, target)
     local ok, data = pcall(Json.decode, response:data())
     local chatroom = ok and type(data) == "table" and data.chatroom or nil
     if type(chatroom) ~= "table" or not tonumber(chatroom.id) then sys(ctx, "Kick did not return a chatroom id"); return end
-    local entry = State.bind(state, normalized.slug, chatroom.id, ctx.channel:get_name()); State.write(state)
+    local livestream = type(data.livestream) == "table" and data.livestream or {}
+    local stream_value = livestream.id or livestream.slug or livestream.created_at
+    local stream_id = stream_value and tostring(stream_value) or nil
+    local entry = State.bind(state, normalized.slug, chatroom.id, ctx.channel:get_name(), stream_id); State.write(state)
     Connection.start(entry); sys(ctx, "Connected to " .. normalized.slug)
   end)
   req:on_error(function() sys(ctx, "Network error while resolving the Kick channel") end); req:execute()
