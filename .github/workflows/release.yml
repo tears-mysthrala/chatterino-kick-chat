@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4 jq zip
+          sudo ln -sf /usr/bin/lua5.4 /usr/local/bin/lua
+      - name: Validate version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          test "$VERSION" = "$(jq -r .version info.json)"
+      - name: Test and build
+        run: |
+          find src tests -name '*.lua' -print0 | xargs -0 -n1 luac -p
+          scripts/test.sh
+          scripts/build_release.sh "${GITHUB_REF_NAME#v}"
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            --title "chatterino-kick-chat $VERSION" \
+            --notes-file docs/release-notes.md \
+            "dist/chatterino-kick-chat-$VERSION.zip" \
+            "dist/chatterino-kick-chat-$VERSION.zip.sha256"
+

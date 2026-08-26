@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4 jq zip
+          sudo ln -sf /usr/bin/lua5.4 /usr/local/bin/lua
+      - name: Validate metadata
+        run: |
+          jq -e '.name == "chatterino-kick-chat"' info.json
+          jq -e '.version == "0.1.0"' info.json
+          jq -e '.license == "MIT"' info.json
+      - name: Parse Lua
+        run: find src tests -name '*.lua' -print0 | xargs -0 -n1 luac -p
+      - name: Format check
+        run: |
+          ! grep -rInP '\t' src tests init.lua
+          ! grep -rInE ' +$' src tests init.lua
+      - name: Secret scan
+        run: |
+          ! grep -R -n -E '(ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,})' --exclude-dir=.git .
+      - name: Run tests
+        run: scripts/test.sh
+      - name: Reproducible package
+        run: |
+          scripts/build_release.sh 0.1.0
+          HASH1="$(sha256sum dist/chatterino-kick-chat-0.1.0.zip | cut -d' ' -f1)"
+          scripts/build_release.sh 0.1.0
+          HASH2="$(sha256sum dist/chatterino-kick-chat-0.1.0.zip | cut -d' ' -f1)"
+          test "$HASH1" = "$HASH2"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: chatterino-kick-chat-0.1.0
+          path: |
+            dist/chatterino-kick-chat-0.1.0.zip
+            dist/chatterino-kick-chat-0.1.0.zip.sha256
+

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Chatterino/chatterino2/master/docs/plugin-info.schema.json",
+  "name": "chatterino-kick-chat",
+  "description": "A read-only Kick chat viewer plugin for Chatterino.",
+  "authors": ["tears-mysthrala"],
+  "homepage": "https://github.com/tears-mysthrala/chatterino-kick-chat",
+  "tags": ["commands", "utility", "kick", "chat"],
+  "version": "0.1.0",
+  "license": "MIT",
+  "permissions": [
+    { "type": "Network" },
+    { "type": "FilesystemRead" },
+    { "type": "FilesystemWrite" }
+  ]
+}
