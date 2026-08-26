@@ -20,9 +20,10 @@ eq(Url.normalize("@some_channel").slug, "some_channel", "Kick handle")
 eq(select(2, Url.normalize("http://kick.com/xqc")), "scheme", "reject HTTP")
 eq(select(2, Url.normalize("https://evil.example/xqc")), "host", "reject foreign host")
 ok(Protocol.websocket_url():match("^wss://ws%-us2%.pusher%.com/"), "Pusher URL")
-local frame = Protocol.decode_frame('{"event":"App\\\\Events\\\\ChatMessageEvent","data":"{\\"id\\":\\"m1\\",\\"content\\":\\"hola\\",\\"sender\\":{\\"username\\":\\"ana\\",\\"identity\\":{\\"badges\\":[{\\"type\\":\\"moderator\\"}]}}}"}')
+local frame = Protocol.decode_frame('{"event":"App\\\\Events\\\\ChatMessageEvent","data":"{\\"id\\":\\"m1\\",\\"content\\":\\"hola\\",\\"sender\\":{\\"id\\":42,\\"username\\":\\"ana\\",\\"identity\\":{\\"badges\\":[{\\"type\\":\\"moderator\\"}]}}}"}')
 local event = Events.normalize(frame.event, frame.data)
 eq(event.author, "ana", "author")
+eq(event.author_id, "42", "stable author id")
 eq(event.badges[1], "moderator", "badge")
 local spec = Builder.build(event, "xqc")
 eq(spec.id, "kick-chat-m1", "message id")
@@ -55,7 +56,7 @@ _G.c2.HTTPRequest = { create = function(method, url)
     if method == "POST" then
       self.success({ status=function() return 202 end, data=function() return '' end })
     else
-      self.success({ status=function() return 200 end, data=function() return '{"chatroom":{"id":668}}' end })
+      self.success({ status=function() return 200 end, data=function() return '{"chatroom":{"id":668},"livestream":{"id":991}}' end })
     end
     if self.finally_callback then self.finally_callback() end
   end
@@ -77,6 +78,12 @@ eq(#sockets, 1, "one shared socket")
 sockets[1].options.on_open()
 ok(sockets[1].sent[1]:find("chatrooms.668.v2", 1, true), "subscription channel")
 ok(sockets[1].sent[2]:find("chatroom_668", 1, true), "legacy event channel")
+local session_published = false
+for _, request in ipairs(requests) do
+  if request.payload and request.payload:find('"kind":"stream_session"', 1, true) and
+      request.payload:find('"stream_id":"991"', 1, true) then session_published = true end
+end
+ok(session_published, "live Kick session published")
 sockets[1].options.on_text('{"event":"App\\\\Events\\\\ChatMessageEvent","data":"{\\"id\\":\\"m2\\",\\"content\\":\\"live\\",\\"sender\\":{\\"username\\":\\"bob\\",\\"identity\\":{\\"badges\\":[]}}}"}')
 eq(#target.messages, 1, "delivered chat message")
 eq(target.messages[1].id, "kick-chat-m2", "delivered id")

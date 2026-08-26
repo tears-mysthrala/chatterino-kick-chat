@@ -19,6 +19,7 @@ function Events.normalize(event_name, data)
     local sender = type(data.sender) == "table" and data.sender or {}
     return {
       kind = "text_message", id = tostring(data.id or ""), author = tostring(sender.username or "[?]"),
+      author_id = sender.id and tostring(sender.id) or nil,
       author_color = type(sender.identity) == "table" and sender.identity.color or nil,
       badges = badges(sender), runs = text_runs(data.content), text = tostring(data.content or ""),
       created_at = data.created_at

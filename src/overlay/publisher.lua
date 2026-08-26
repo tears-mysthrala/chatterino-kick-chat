@@ -16,8 +16,13 @@ function Publisher.payload(panel, event)
   return {
     panel = panel:lower(), platform = "kick", kind = tostring(event.kind or "event"),
     id = event.id and tostring(event.id) or nil, author = event.author and tostring(event.author) or nil,
-    text = event_text(event), color = event.author_color, badges = badges
+    text = event_text(event), color = event.author_color, badges = badges,
+    channel = event.channel, user_id = event.author_id, stream_id = event.stream_id
   }
+end
+
+function Publisher.session(panel, stream_id, channel)
+  return Publisher.publish(panel, { kind = "stream_session", stream_id = stream_id, channel = channel })
 end
 
 function Publisher.publish(panel, event)
