@@ -13,8 +13,7 @@ function State.validate(value)
       for _, split in ipairs(type(entry.splits) == "table" and entry.splits or {}) do
         if type(split) == "string" and split ~= "" and #split <= 256 and #splits < 64 then splits[#splits + 1] = split end
       end
-      out.channels[slug] = { slug = slug, chatroom_id = tonumber(entry.chatroom_id), splits = splits, paused = entry.paused == true,
-        stream_id = type(entry.stream_id) == "string" and entry.stream_id or nil }
+      out.channels[slug] = { slug = slug, chatroom_id = tonumber(entry.chatroom_id), splits = splits, paused = entry.paused == true }
     end
   end
   return out
@@ -37,7 +36,7 @@ end
 function State.bind(state, slug, chatroom_id, split, stream_id)
   local entry = state.channels[slug] or { slug = slug, splits = {}, paused = false }
   entry.chatroom_id = tonumber(chatroom_id)
-  entry.stream_id = stream_id and tostring(stream_id) or entry.stream_id
+  entry.stream_id = stream_id and tostring(stream_id) or nil
   for _, value in ipairs(entry.splits) do if value == split then state.channels[slug] = entry; return entry end end
   entry.splits[#entry.splits + 1] = split; state.channels[slug] = entry; return entry
 end

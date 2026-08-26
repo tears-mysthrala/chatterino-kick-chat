@@ -37,6 +37,8 @@ local function connect(entry)
         for _, split in ipairs(live_splits(current.entry)) do
           OverlayPublisher.session(split, stream_id, current.entry.slug)
         end
+	  else
+		current.entry.stream_id = nil
       end
     end)
     request:on_error(function() end)
