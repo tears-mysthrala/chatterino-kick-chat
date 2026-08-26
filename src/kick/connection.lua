@@ -2,6 +2,7 @@ local Protocol = require("src.kick.protocol")
 local Events = require("src.kick.events")
 local Builder = require("src.messages.builder")
 local Adapter = require("src.c2_adapter")
+local OverlayPublisher = require("src.overlay.publisher")
 
 local Connection = {}
 local active = {}
@@ -31,6 +32,7 @@ local function connect(entry)
       if frame.event == "pusher:ping" then socket:send_text(Protocol.pong()); return end
       local event = Events.normalize(frame.event, frame.data); if not event then return end
       local splits = live_splits(current.entry); if #splits == 0 then socket:close(); active[entry.slug] = nil; return end
+      for _, split in ipairs(splits) do OverlayPublisher.publish(split, event) end
       Adapter.deliver(Builder.build(event, entry.slug), splits)
     end,
     on_close = function()

@@ -49,6 +49,10 @@ subscriptions, deletions, bans and chat clears. It never sends chat messages
 or moderation actions. Multiple splits bound to the same Kick channel share
 one WebSocket connection.
 
+When [chatterino-multichat-overlay](https://github.com/tears-mysthrala/chatterino-multichat-overlay)
+is running, events are also copied to its loopback-only OBS overlay. Failures
+are silent and never affect chat delivery in Chatterino.
+
 ## Network and persisted data
 
 - `https://kick.com/api/v2/channels/<slug>` discovers the public chatroom id.
@@ -62,7 +66,7 @@ From WSL/Linux:
 
 ```bash
 scripts/test.sh
-scripts/build_release.sh 0.1.0
+scripts/build_release.sh 0.2.0
 ```
 
 On Windows, `scripts/test.ps1` invokes the test suite through WSL.

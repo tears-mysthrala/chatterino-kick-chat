@@ -37,7 +37,7 @@ function target:add_system_message(message) self.systems[#self.systems + 1] = me
 channels["gilraennr"] = target
 
 _G.c2 = {
-  HTTPMethod = { Get = "GET" },
+  HTTPMethod = { Get = "GET", Post = "POST" },
   Channel = { by_name = function(name) return channels[name] end },
   Message = { new = function(specification) return specification end },
   register_command = function(name, callback) commands[name] = callback end,
@@ -47,10 +47,17 @@ _G.c2.HTTPRequest = { create = function(method, url)
   local request = { method=method, url=url, headers={} }; requests[#requests + 1] = request
   function request:set_header(name,value) self.headers[name]=value end
   function request:set_timeout(value) self.timeout=value end
+  function request:set_payload(value) self.payload=value end
   function request:on_success(callback) self.success=callback end
   function request:on_error(callback) self.failure=callback end
+  function request:finally(callback) self.finally_callback=callback end
   function request:execute()
-    self.success({ status=function() return 200 end, data=function() return '{"chatroom":{"id":668}}' end })
+    if method == "POST" then
+      self.success({ status=function() return 202 end, data=function() return '' end })
+    else
+      self.success({ status=function() return 200 end, data=function() return '{"chatroom":{"id":668}}' end })
+    end
+    if self.finally_callback then self.finally_callback() end
   end
   return request
 end }
@@ -73,5 +80,7 @@ ok(sockets[1].sent[2]:find("chatroom_668", 1, true), "legacy event channel")
 sockets[1].options.on_text('{"event":"App\\\\Events\\\\ChatMessageEvent","data":"{\\"id\\":\\"m2\\",\\"content\\":\\"live\\",\\"sender\\":{\\"username\\":\\"bob\\",\\"identity\\":{\\"badges\\":[]}}}"}')
 eq(#target.messages, 1, "delivered chat message")
 eq(target.messages[1].id, "kick-chat-m2", "delivered id")
+eq(requests[#requests].method, "POST", "overlay event posted")
+ok(requests[#requests].payload:find('"panel":"gilraennr"', 1, true), "overlay panel")
 
 print("Assertions: " .. assertions .. ", Failures: 0")
