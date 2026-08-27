@@ -15,13 +15,61 @@ persistent bindings and an executable test harness.
 
 ## Installation
 
-Download the versioned ZIP from the repository's Releases page, verify it with
-the adjacent `.sha256` file and extract it into Chatterino's plugin directory
-as `Plugins/chatterino-kick-chat/`. Restart Chatterino and enable the plugin.
+### Windows (no terminal required)
 
-- Windows: `%APPDATA%\Chatterino2\Plugins\`
-- Linux: `~/.local/share/chatterino/Plugins/`
+1. Open the [Releases page](https://github.com/tears-mysthrala/chatterino-kick-chat/releases)
+   and select the latest release that is not marked **Pre-release**.
+2. Under **Assets**, download the file whose name starts with
+   `chatterino-kick-chat-` and ends in `.zip`. Do not download the files named
+   **Source code**.
+3. Press `Windows key + R`, paste `%APPDATA%\Chatterino2\Plugins`, and select
+   **OK**. If Windows says the folder does not exist, create the `Plugins`
+   folder inside `%APPDATA%\Chatterino2`.
+4. Inside `Plugins`, create a folder named exactly `chatterino-kick-chat`.
+5. Open the downloaded ZIP, select everything inside it, and copy those files
+   into the new `chatterino-kick-chat` folder.
+6. Check the result: `init.lua` and `info.json` must be directly inside
+   `chatterino-kick-chat`, not inside another nested folder.
+7. Restart Chatterino. Open **Settings → Plugins**, turn on **Enable plugins**,
+   and enable `chatterino-kick-chat`.
+8. In the input box of a named channel panel, enter `/kick-chat status` to
+   confirm that the plugin responds.
+
+No Kick login, API key, administrator access, PowerShell, or other software is
+required.
+
+### macOS and Linux
+
+Extract the contents of the release ZIP into a folder named
+`chatterino-kick-chat` inside Chatterino's `Plugins` directory:
+
 - macOS: `~/Library/Application Support/chatterino/Plugins/`
+- Linux: `~/.local/share/chatterino/Plugins/`
+- Linux (Flatpak): `~/.var/app/com.chatterino.chatterino/data/chatterino/Plugins/`
+
+After extraction, `init.lua` and `info.json` must be directly inside that
+folder. Restart Chatterino, open **Settings → Plugins**, turn on
+**Enable plugins**, and enable `chatterino-kick-chat`.
+
+### Optional download verification
+
+The release also provides a `.sha256` file. It contains the expected SHA-256
+fingerprint of the ZIP. On Windows, open PowerShell, type `Get-FileHash `
+(including the final space), drag the downloaded ZIP into the PowerShell
+window, type ` -Algorithm SHA256`, and press Enter. The displayed **Hash** must
+match the sequence in the `.sha256` file; uppercase and lowercase do not
+matter. This command only reads the file.
+
+## Updating without losing saved channels
+
+1. Close Chatterino.
+2. Open the existing `chatterino-kick-chat` folder and copy its `data` folder
+   to a safe place, such as the Desktop. This is your backup.
+3. Open the new release ZIP and copy everything into the existing
+   `chatterino-kick-chat` folder. Choose **Replace the files in the destination**
+   if Windows asks. Do not delete the existing `data` folder.
+4. Restart Chatterino and enter `/kick-chat status` in a named channel panel.
+5. Once your saved channels appear correctly, you may delete the backup.
 
 ## Usage
 
