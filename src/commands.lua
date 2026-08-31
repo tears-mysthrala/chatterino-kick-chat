@@ -18,7 +18,9 @@ local function add(state, ctx, target)
     local stream_value = livestream.id or livestream.slug or livestream.created_at
     local stream_id = stream_value and tostring(stream_value) or nil
     local entry = State.bind(state, normalized.slug, chatroom.id, ctx.channel:get_name(), stream_id); State.write(state)
-    Connection.start(entry); sys(ctx, "Connected to " .. normalized.slug)
+    local started = Connection.start(entry)
+    sys(ctx, started and ("Connection requested for " .. normalized.slug) or
+      ("Could not open " .. normalized.slug .. "; retry scheduled"))
   end)
   req:on_error(function() sys(ctx, "Network error while resolving the Kick channel") end); req:execute()
 end
@@ -29,7 +31,15 @@ function Commands.register(state)
     local arg = tostring(ctx.words[2] or "")
     if arg == "" or arg == "help" then sys(ctx, "Usage: /kick-chat <channel|URL> · auto [channel] · list · status · pause <channel> · resume <channel> · remove <channel>"); return end
     if arg == "list" then for slug, entry in pairs(state.channels) do sys(ctx, slug .. " · " .. (entry.paused and "paused" or "active") .. " · " .. #entry.splits .. " split(s)") end; return end
-    if arg == "status" then for _, item in ipairs(Connection.status()) do sys(ctx, item.slug .. " · " .. (item.connected and "socket active" or "reconnecting") .. " · errors " .. item.errors) end; return end
+    if arg == "status" then
+      local items = Connection.status()
+      if #items == 0 then sys(ctx, "No active Kick connections"); return end
+      for _, item in ipairs(items) do
+        local detail = item.last_error and (" · " .. item.last_error) or ""
+        sys(ctx, item.slug .. " · " .. item.phase .. " · errors " .. item.errors .. detail)
+      end
+      return
+    end
     if arg == "pause" or arg == "resume" or arg == "remove" then
       local slug = tostring(ctx.words[3] or ""):lower():gsub("^@", ""); local entry = state.channels[slug]
       if not entry then sys(ctx, "Unknown channel: " .. slug); return end
