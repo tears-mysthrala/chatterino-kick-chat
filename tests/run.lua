@@ -118,6 +118,10 @@ ok(sockets[1].sent[1]:find("chatrooms.668.v2", 1, true), "subscription channel")
 ok(sockets[1].sent[2]:find("chatroom_668", 1, true), "legacy event channel")
 eq(require("src.kick.connection").status()[1].phase, "connecting", "Pusher handshake alone is not connected")
 sockets[1].options.on_text('{"event":"pusher_internal:subscription_succeeded","channel":"chatrooms.668.v2","data":"{}"}')
+local legacy_sent_before = #sockets[1].sent
+sockets[1].options.on_text('{"event":"pusher:subscription_error","channel":"chatroom_668","data":"{}"}')
+ok(not sockets[1].closed, "legacy subscription error leaves primary connection alive")
+eq(#sockets[1].sent, legacy_sent_before, "legacy subscription error needs no transport response")
 local session_published = false
 for _, request in ipairs(requests) do
   if request.payload and request.payload:find('"kind":"stream_session"', 1, true) and
@@ -190,6 +194,9 @@ timeout_socket.options.on_text('{"event":"pusher:connection_established","data":
 run_until(30000, function() return timeout_socket.closed end, 10)
 eq(Connection.status()[1].phase, "reconnecting", "missing subscription confirmation reconnects")
 eq(Connection.status()[1].last_error, "subscription_timeout", "subscription timeout is observable")
+local sockets_before_timeout_retry = #sockets
+run_until(1000, function() return #sockets > sockets_before_timeout_retry end, 10)
+eq(Connection.status()[1].last_error, "subscription_timeout", "replacement socket preserves last error")
 
 Connection._reset()
 ok(Connection.start({ slug="permanent-error", chatroom_id=88, splits={"gilraennr"} }),

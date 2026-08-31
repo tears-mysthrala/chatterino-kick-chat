@@ -130,6 +130,7 @@ connect = function(entry)
   local current = {
     entry = entry,
     errors = existing and existing.errors or 0,
+    last_error = existing and existing.last_error or nil,
     transport_open = false,
     connected = false,
     retry_scheduled = false,
@@ -199,6 +200,8 @@ connect = function(entry)
         return
       end
       if frame.event == "pusher:subscription_error" then
+        local legacy = "chatroom_" .. tostring(current.entry.chatroom_id)
+        if frame.channel == legacy then return end
         current.last_error = "subscription_error"
         if current.socket then current.socket:close() end
         return
