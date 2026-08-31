@@ -46,7 +46,7 @@ _G.c2 = {
   Channel = { by_name = function(name) return channels[name] end },
   Message = { new = function(specification) return specification end },
   register_command = function(name, callback) commands[name] = callback end,
-  later = function(callback) later_callbacks[#later_callbacks + 1] = callback end
+  later = function(callback, ms) later_callbacks[#later_callbacks + 1] = { callback=callback, ms=ms } end
 }
 _G.c2.HTTPRequest = { create = function(method, url)
   local request = { method=method, url=url, headers={} }; requests[#requests + 1] = request
@@ -67,12 +67,43 @@ _G.c2.HTTPRequest = { create = function(method, url)
   end
   return request
 end }
-_G.c2.WebSocket = { new = function(url, options)
-  local socket = { url=url, sent={}, options=options }; sockets[#sockets + 1] = socket
+local function websocket_new(url, options)
+  local socket = { url=url, sent={}, options=options, closed=false }; sockets[#sockets + 1] = socket
   function socket:send_text(text) self.sent[#self.sent + 1] = text end
-  function socket:close() end
+  function socket:close()
+    if self.closed then return end
+    self.closed = true
+    self.options.on_close()
+  end
   return socket
-end }
+end
+_G.c2.WebSocket = { new = websocket_new }
+
+local function take_timer(ms)
+  for index, timer in ipairs(later_callbacks) do
+    if timer.ms == ms then
+      table.remove(later_callbacks, index)
+      return timer.callback
+    end
+  end
+  error("missing timer " .. tostring(ms))
+end
+
+local function run_until(ms, predicate, max_steps)
+  for _ = 1, max_steps or 20 do
+    take_timer(ms)()
+    if predicate() then return end
+  end
+  error("condition not reached for timer " .. tostring(ms))
+end
+
+local function sent_count(socket, needle)
+  local count = 0
+  for _, value in ipairs(socket.sent) do
+    if value:find(needle, 1, true) then count = count + 1 end
+  end
+  return count
+end
 
 local state = { schema_version=1, channels={} }
 require("src.commands").register(state)
@@ -80,9 +111,13 @@ commands["/kick-chat"]({ words={"/kick-chat", "auto"}, channel=target })
 eq(#requests, 1, "one discovery request")
 ok(requests[1].url:find("/gilraennr", 1, true), "auto uses current Twitch channel name")
 eq(#sockets, 1, "one shared socket")
+ok(target.systems[#target.systems]:find("Connection requested", 1, true), "command does not claim premature connection")
 sockets[1].options.on_open()
+sockets[1].options.on_text('{"event":"pusher:connection_established","data":"{\\"socket_id\\":\\"1.1\\",\\"activity_timeout\\":120}"}')
 ok(sockets[1].sent[1]:find("chatrooms.668.v2", 1, true), "subscription channel")
 ok(sockets[1].sent[2]:find("chatroom_668", 1, true), "legacy event channel")
+eq(require("src.kick.connection").status()[1].phase, "connecting", "Pusher handshake alone is not connected")
+sockets[1].options.on_text('{"event":"pusher_internal:subscription_succeeded","channel":"chatrooms.668.v2","data":"{}"}')
 local session_published = false
 for _, request in ipairs(requests) do
   if request.payload and request.payload:find('"kind":"stream_session"', 1, true) and
@@ -90,12 +125,94 @@ for _, request in ipairs(requests) do
 end
 ok(session_published, "live Kick session published")
 kick_live = false
-later_callbacks[1]()
+take_timer(60000)()
 sockets[1].options.on_text('{"event":"App\\\\Events\\\\ChatMessageEvent","data":"{\\"id\\":\\"m2\\",\\"content\\":\\"live\\",\\"sender\\":{\\"username\\":\\"bob\\",\\"identity\\":{\\"badges\\":[]}}}"}')
 eq(#target.messages, 1, "delivered chat message")
 eq(target.messages[1].id, "kick-chat-m2", "delivered id")
 eq(requests[#requests].method, "POST", "overlay event posted")
 ok(requests[#requests].payload:find('"panel":"gilraennr"', 1, true), "overlay panel")
 ok(not requests[#requests].payload:find('"stream_id"', 1, true), "offline chat omits stale stream id")
+
+local Connection = require("src.kick.connection")
+eq(Connection.status()[1].phase, "connected", "status distinguishes an open socket")
+sockets[1].options.on_close()
+eq(Connection.status()[1].phase, "reconnecting", "closed socket enters reconnecting state")
+eq(Connection.status()[1].errors, 1, "first connection failure recorded")
+local sent_before_stale = #sockets[1].sent
+local stale_ok = pcall(sockets[1].options.on_text, '{"event":"pusher:ping","data":"{}"}')
+ok(stale_ok, "late frame after close is ignored safely")
+eq(#sockets[1].sent, sent_before_stale, "late frame after close cannot send or publish")
+sockets[1].options.on_close()
+eq(Connection.status()[1].errors, 1, "duplicate close callback does not double-count failure")
+take_timer(1000)()
+eq(#sockets, 2, "first reconnect creates a new socket")
+eq(Connection.status()[1].phase, "connecting", "new socket starts in connecting state")
+sockets[2].options.on_close()
+eq(Connection.status()[1].errors, 2, "consecutive failure count survives socket replacement")
+take_timer(2000)()
+eq(#sockets, 3, "second reconnect creates a new socket")
+sockets[3].options.on_open()
+sockets[3].options.on_text('{"event":"pusher:connection_established","data":"{\\"socket_id\\":\\"1.2\\",\\"activity_timeout\\":15}"}')
+eq(Connection.status()[1].errors, 2, "Pusher handshake does not reset failure count")
+sockets[3].options.on_text('{"event":"pusher_internal:subscription_succeeded","channel":"chatrooms.668.v2","data":"{}"}')
+eq(Connection.status()[1].phase, "connected", "primary subscription confirms connection")
+eq(Connection.status()[1].errors, 2, "subscription must remain stable before resetting backoff")
+run_until(10000, function() return Connection.status()[1].errors == 0 end, 10)
+eq(Connection.status()[1].errors, 0, "stable subscription resets failure count")
+
+local ping_count = sent_count(sockets[3], '"event":"pusher:ping"')
+run_until(5000, function() return sent_count(sockets[3], '"event":"pusher:ping"') > ping_count end, 10)
+ok(not sockets[3].closed, "inactive socket sends Pusher ping before closing")
+sockets[3].options.on_text('{"event":"pusher:pong","data":"{}"}')
+ping_count = sent_count(sockets[3], '"event":"pusher:ping"')
+run_until(5000, function() return sent_count(sockets[3], '"event":"pusher:ping"') > ping_count end, 10)
+ok(not sockets[3].closed, "Pusher pong keeps the socket open")
+
+run_until(5000, function() return sockets[3].closed end, 10)
+ok(sockets[3].closed, "missing Pusher pong closes a stale socket")
+eq(Connection.status()[1].phase, "reconnecting", "watchdog closure schedules reconnect")
+eq(Connection.status()[1].errors, 1, "watchdog closure uses normal failure accounting")
+
+Connection._reset()
+_G.c2.WebSocket.new = function() error("synthetic constructor failure") end
+commands["/kick-chat"]({ words={"/kick-chat", "constructor-failure"}, channel=target })
+ok(target.systems[#target.systems]:find("retry scheduled", 1, true), "constructor failure is reported as retrying")
+eq(Connection.status()[1].phase, "reconnecting", "constructor failure schedules reconnect")
+eq(Connection.status()[1].errors, 1, "constructor failure uses normal failure accounting")
+
+Connection._reset()
+_G.c2.WebSocket.new = websocket_new
+ok(Connection.start({ slug="subscription-timeout", chatroom_id=77, splits={"gilraennr"} }),
+  "subscription-timeout socket starts")
+local timeout_socket = sockets[#sockets]
+timeout_socket.options.on_open()
+timeout_socket.options.on_text('{"event":"pusher:connection_established","data":"{\\"socket_id\\":\\"2.1\\"}"}')
+run_until(30000, function() return timeout_socket.closed end, 10)
+eq(Connection.status()[1].phase, "reconnecting", "missing subscription confirmation reconnects")
+eq(Connection.status()[1].last_error, "subscription_timeout", "subscription timeout is observable")
+
+Connection._reset()
+ok(Connection.start({ slug="permanent-error", chatroom_id=88, splits={"gilraennr"} }),
+  "permanent-error socket starts")
+local permanent_socket = sockets[#sockets]
+permanent_socket.options.on_open()
+permanent_socket.options.on_text('{"event":"pusher:connection_established","data":"{\\"socket_id\\":\\"3.1\\"}"}')
+permanent_socket.options.on_text('{"event":"pusher:error","data":"{\\"code\\":4001,\\"message\\":\\"Application does not exist\\"}"}')
+ok(permanent_socket.closed, "explicit permanent Pusher error closes socket")
+eq(Connection.status()[1].phase, "failed", "explicit permanent Pusher error is not retried unchanged")
+eq(Connection.status()[1].last_error, "pusher_4001", "explicit permanent Pusher code is observable")
+commands["/kick-chat"]({ words={"/kick-chat", "status"}, channel=target })
+ok(target.systems[#target.systems]:find("pusher_4001", 1, true), "status shows the last Pusher error")
+
+Connection._reset()
+ok(Connection.start({ slug="immediate-error", chatroom_id=89, splits={"gilraennr"} }),
+  "immediate-error socket starts")
+local immediate_socket = sockets[#sockets]
+immediate_socket.options.on_open()
+immediate_socket.options.on_text('{"event":"pusher:connection_established","data":"{\\"socket_id\\":\\"4.1\\"}"}')
+local sockets_before_immediate = #sockets
+immediate_socket.options.on_text('{"event":"pusher:error","data":"{\\"code\\":4201,\\"message\\":\\"Pong reply not received\\"}"}')
+take_timer(0)()
+eq(#sockets, sockets_before_immediate + 1, "explicit 4200-range error reconnects immediately")
 
 print("Assertions: " .. assertions .. ", Failures: 0")

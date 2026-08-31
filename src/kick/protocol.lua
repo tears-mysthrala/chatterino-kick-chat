@@ -33,4 +33,8 @@ function Protocol.pong()
   return Json.encode({ event = "pusher:pong", data = {} })
 end
 
+function Protocol.ping()
+  return Json.encode({ event = "pusher:ping", data = {} })
+end
+
 return Protocol

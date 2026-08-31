@@ -90,7 +90,7 @@ Run this in a named Chatterino split:
 `/kick-chat auto` uses the current split's channel name as the Kick slug. This
 is intended for creators who use the same name on Twitch and Kick. Pass an
 explicit slug after `auto` when the names differ. The binding is persisted and
-reconnects when Chatterino starts again.
+reconnects when Chatterino starts again or the Kick connection is interrupted.
 
 The plugin displays ordinary messages, badges, subscriptions, gifted
 subscriptions, deletions, bans and chat clears. It never sends chat messages
