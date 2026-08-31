@@ -24,8 +24,8 @@ Chatterino's current Lua `on_close()` callback exposes neither the WebSocket
 close code nor its reason. When Pusher v7 supplies a policy only through that
 close code, the plugin cannot distinguish permanent `4000-4099` closures from
 immediate `4200-4299` closures and applies bounded generic backoff. If an
-explicit `pusher:error` frame is available, the plugin stops unchanged retries
-for `4000-4099` and reconnects immediately for `4200-4299`.
+explicit `pusher:error` frame is available, the plugin stops retries for
+`4000-4099` and reconnects immediately for `4200-4299`.
 
 The Pusher application key, host, public channel name and event names are
 website implementation details, not a supported Kick Public API contract.

@@ -32,7 +32,9 @@ function Commands.register(state)
     if arg == "" or arg == "help" then sys(ctx, "Usage: /kick-chat <channel|URL> · auto [channel] · list · status · pause <channel> · resume <channel> · remove <channel>"); return end
     if arg == "list" then for slug, entry in pairs(state.channels) do sys(ctx, slug .. " · " .. (entry.paused and "paused" or "active") .. " · " .. #entry.splits .. " split(s)") end; return end
     if arg == "status" then
-      for _, item in ipairs(Connection.status()) do
+      local items = Connection.status()
+      if #items == 0 then sys(ctx, "No active Kick connections"); return end
+      for _, item in ipairs(items) do
         local detail = item.last_error and (" · " .. item.last_error) or ""
         sys(ctx, item.slug .. " · " .. item.phase .. " · errors " .. item.errors .. detail)
       end

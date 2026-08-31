@@ -231,7 +231,10 @@ connect = function(entry)
     schedule_reconnect(current)
     return false
   end
-  if current.retry_scheduled or active[entry.slug] ~= current then return false end
+  if current.retry_scheduled or active[entry.slug] ~= current then
+    pcall(function() socket:close() end)
+    return false
+  end
   current.socket = socket
   if current.open_pending then
     current.open_pending = false

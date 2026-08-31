@@ -222,4 +222,25 @@ immediate_socket.options.on_text('{"event":"pusher:error","data":"{\\"code\\":42
 take_timer(0)()
 eq(#sockets, sockets_before_immediate + 1, "explicit 4200-range error reconnects immediately")
 
+Connection._reset()
+commands["/kick-chat"]({ words={"/kick-chat", "status"}, channel=target })
+ok(target.systems[#target.systems]:find("No active Kick connections", 1, true), "empty status is explicit")
+
+local abandoned_socket
+_G.c2.WebSocket.new = function(_, options)
+  abandoned_socket = { closed=false, options=options }
+  function abandoned_socket:close()
+    if self.closed then return end
+    self.closed = true
+    self.options.on_close()
+  end
+  function abandoned_socket:send_text() end
+  Connection.stop("abandoned")
+  return abandoned_socket
+end
+ok(not Connection.start({ slug="abandoned", chatroom_id=90, splits={"gilraennr"} }),
+  "connection that loses ownership does not start")
+ok(abandoned_socket.closed, "connection that loses ownership closes its socket")
+eq(#Connection.status(), 0, "abandoned connection leaves no active state")
+
 print("Assertions: " .. assertions .. ", Failures: 0")
