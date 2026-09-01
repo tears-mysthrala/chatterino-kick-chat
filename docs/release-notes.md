@@ -1,4 +1,4 @@
-# Unreleased
+# chatterino-kick-chat 0.3.1
 
 - Detects silent or half-open Pusher connections with the server-provided
   activity timeout and an application-level ping/pong watchdog.
