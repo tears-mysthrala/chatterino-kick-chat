@@ -47,7 +47,7 @@ disableable and must never download or install an update automatically.
 3. Test behavior with the overlay available and unavailable.
 4. Run the complete checks:
    - `scripts/test.sh`
-   - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
+   - `& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
    - `scripts/build_release.sh "$(jq -r .version info.json)"` twice and compare
      the resulting ZIP hashes.
 5. Update compatibility and release notes when behavior changes.

@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 
 echo Installing or updating chatterino-kick-chat...
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install.ps1" -CloseChatterino
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install.ps1" -CloseChatterino
 set "INSTALL_EXIT=%ERRORLEVEL%"
 
 if not "%INSTALL_EXIT%"=="0" (

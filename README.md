@@ -40,7 +40,7 @@ If the launcher does not open, right-click an empty area in the extracted
 folder, select **Open in Terminal**, and run:
 
 ```powershell
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -CloseChatterino
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -CloseChatterino
 ```
 
 ### macOS and Linux
