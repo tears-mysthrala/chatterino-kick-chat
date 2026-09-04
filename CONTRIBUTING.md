@@ -48,14 +48,22 @@ disableable and must never download or install an update automatically.
 4. Run the complete checks:
    - `scripts/test.sh`
    - `& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
-   - `scripts/build_release.sh "$(jq -r .version info.json)"` twice and compare
-     the resulting ZIP hashes.
+   - Verify reproducible packaging with the commands below.
 5. Update compatibility and release notes when behavior changes.
 
 Release pull requests must update `info.json` and `docs/release-notes.md`. The
 tag must match the metadata version exactly. The release ZIP must contain
 `install-or-update.cmd`, `scripts/install.ps1`, the plugin files, `LICENSE` and
 `SECURITY.md`.
+
+```bash
+VERSION="$(jq -r .version info.json)"
+scripts/build_release.sh "$VERSION"
+HASH1="$(sha256sum "dist/chatterino-kick-chat-$VERSION.zip" | cut -d' ' -f1)"
+scripts/build_release.sh "$VERSION"
+HASH2="$(sha256sum "dist/chatterino-kick-chat-$VERSION.zip" | cut -d' ' -f1)"
+test "$HASH1" = "$HASH2"
+```
 
 Pull requests must state the observed upstream payload, security/privacy impact,
 fallback behavior and exact checks performed. Never include credentials, private

@@ -20,13 +20,15 @@ persistent bindings and an executable test harness.
 1. Open the [Releases page](https://github.com/tears-mysthrala/chatterino-kick-chat/releases)
    and select the latest release that is not marked **Pre-release**.
 2. Under **Assets**, download the file whose name starts with
-   `chatterino-kick-chat-` and ends in `.zip`. Do not download the files named
-   **Source code**.
-3. Right-click the ZIP, select **Extract all**, and open the extracted folder.
+   `chatterino-kick-chat-` and ends in `.zip`, plus its matching `.sha256`
+   file. Do not download the files named **Source code**.
+3. Before extracting anything, complete the **Required download verification**
+   below. Stop if the hashes do not match.
+4. Right-click the verified ZIP, select **Extract all**, and open the extracted folder.
    Do not run the installer from inside the ZIP preview.
-4. Double-click `install-or-update.cmd`. Do not run it as administrator.
-5. Wait for `Done`, press any key to close the installer, and open Chatterino.
-6. In the input box of a named channel panel, enter `/kick-chat status` to
+5. Double-click `install-or-update.cmd`. Do not run it as administrator.
+6. Wait for `Done`, press any key to close the installer, and open Chatterino.
+7. In the input box of a named channel panel, enter `/kick-chat status` to
    confirm that the plugin responds.
 
 The installer closes Chatterino normally if needed, backs up the previous
@@ -56,10 +58,10 @@ After extraction, `init.lua` and `info.json` must be directly inside that
 folder. Restart Chatterino, open **Settings → Plugins**, turn on
 **Enable plugins**, and enable `chatterino-kick-chat`.
 
-### Optional download verification
+### Required download verification
 
-The release also provides a `.sha256` file. It contains the expected SHA-256
-fingerprint of the ZIP. On Windows, open PowerShell, type `Get-FileHash `
+The release provides a `.sha256` file with the expected SHA-256 fingerprint.
+Verify it before extracting or running the ZIP. On Windows, open PowerShell, type `Get-FileHash `
 (including the final space), drag the downloaded ZIP into the PowerShell
 window, type ` -Algorithm SHA256`, and press Enter. The displayed **Hash** must
 match the sequence in the `.sha256` file; uppercase and lowercase do not
