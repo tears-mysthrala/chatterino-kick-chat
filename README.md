@@ -31,8 +31,9 @@ persistent bindings and an executable test harness.
 7. In the input box of a named channel panel, enter `/kick-chat status` to
    confirm that the plugin responds.
 
-The installer closes Chatterino normally if needed, backs up the previous
-plugin and its settings under `%APPDATA%\Chatterino2\PluginBackups`, preserves
+The installer requests a normal Chatterino shutdown if needed, waits 15
+seconds, and stops only background processes left without a window. It backs
+up the previous plugin and its settings under `%APPDATA%\Chatterino2\PluginBackups`, preserves
 `data/`, removes obsolete program files, and enables the plugin automatically.
 It uses the Windows PowerShell already installed with Windows, without changing
 the system-wide execution policy. No Kick login, API key, administrator access,
@@ -66,6 +67,10 @@ Verify it before extracting or running the ZIP. On Windows, open PowerShell, typ
 window, type ` -Algorithm SHA256`, and press Enter. The displayed **Hash** must
 match the sequence in the `.sha256` file; uppercase and lowercase do not
 matter. This command only reads the file.
+
+If PowerShell says that `Get-FileHash` is unavailable, type
+`certutil -hashfile `, drag the ZIP into the window, type ` SHA256`, and press
+Enter. Compare the resulting hash in the same way.
 
 ## Updating without losing saved channels
 

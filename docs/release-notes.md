@@ -1,14 +1,17 @@
-# chatterino-kick-chat 0.3.2
+# chatterino-kick-chat 0.3.3
 
-This release adds a safe one-click Windows installer and updater. Chat behavior
-is unchanged.
+This patch makes the one-click Windows installer reliable when Chatterino
+leaves a background process behind or `Get-FileHash` is unavailable during
+Windows PowerShell script execution. Chat behavior is unchanged.
 
 ## Install or update on Windows
 
-1. Download `chatterino-kick-chat-0.3.2.zip` and its matching `.sha256`
+1. Download `chatterino-kick-chat-0.3.3.zip` and its matching `.sha256`
    file from this release.
 2. Before extraction, open PowerShell in the download folder and run
-   `(Get-FileHash .\chatterino-kick-chat-0.3.2.zip -Algorithm SHA256).Hash`.
+   `(Get-FileHash .\chatterino-kick-chat-0.3.3.zip -Algorithm SHA256).Hash`.
+   If that command is unavailable, run
+   `certutil -hashfile .\chatterino-kick-chat-0.3.3.zip SHA256`.
 3. Compare the result with the hash in the `.sha256` file. Continue only when
    they match.
 4. Select **Extract all** in File Explorer.
@@ -18,8 +21,9 @@ is unchanged.
 
 The launcher uses the Windows PowerShell already included with Windows. Its
 execution-policy bypass applies only to the installer process. The installer
-closes Chatterino normally, creates a recoverable backup under
-`%APPDATA%\Chatterino2\PluginBackups`, preserves and hashes the plugin's `data/`
+requests a normal Chatterino shutdown and, after a 15-second grace period,
+stops only remaining processes without a window. It creates a recoverable
+backup under `%APPDATA%\Chatterino2\PluginBackups`, preserves and hashes the plugin's `data/`
 directory, migrates compatible data from older versioned plugin folders,
 enables plugin support and this plugin, and restores the previous installation
 if an update fails.
@@ -34,5 +38,5 @@ update automatically. macOS and Linux installations remain manual.
 
 ## Assets
 
-- `chatterino-kick-chat-0.3.2.zip`
-- `chatterino-kick-chat-0.3.2.zip.sha256`
+- `chatterino-kick-chat-0.3.3.zip`
+- `chatterino-kick-chat-0.3.3.zip.sha256`
