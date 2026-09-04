@@ -47,12 +47,13 @@ disableable and must never download or install an update automatically.
 3. Test behavior with the overlay available and unavailable.
 4. Run the complete checks:
    - `scripts/test.sh`
-   - `& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
+   - On Windows only: `& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
    - Verify reproducible packaging with the commands below.
 5. Update compatibility and release notes when behavior changes.
 
-Release pull requests must update `info.json` and `docs/release-notes.md`. The
-tag must match the metadata version exactly. The release ZIP must contain
+Release pull requests must update `info.json` and `docs/release-notes.md`.
+Metadata stores the bare version; release tags add a leading `v`, and CI strips
+that prefix before requiring an exact match. The release ZIP must contain
 `install-or-update.cmd`, `scripts/install.ps1`, the plugin files, `LICENSE` and
 `SECURITY.md`.
 

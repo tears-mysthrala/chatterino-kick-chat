@@ -79,12 +79,18 @@ function Move-LegacyPluginToBackup {
 }
 
 function Restore-QuarantinedLegacyPlugins {
+  $failures = @()
   for ($index = $script:quarantinedLegacy.Count - 1; $index -ge 0; $index--) {
     $move = $script:quarantinedLegacy[$index]
     if (-not (Test-Path -LiteralPath $move.Backup -PathType Container)) { continue }
-    if (Test-Path -LiteralPath $move.Source) { throw "Could not restore legacy plugin folder $($move.Source): the path already exists." }
-    Move-Item -LiteralPath $move.Backup -Destination $move.Source
+    if (Test-Path -LiteralPath $move.Source) {
+      $failures += "Could not restore legacy plugin folder $($move.Source): the path already exists."
+      continue
+    }
+    try { Move-Item -LiteralPath $move.Backup -Destination $move.Source -ErrorAction Stop }
+    catch { $failures += $_.Exception.Message }
   }
+  if ($failures.Count -gt 0) { throw ($failures -join " ") }
 }
 
 function Enable-ChatterinoPlugin {
@@ -102,7 +108,7 @@ function Enable-ChatterinoPlugin {
   }
 
   try {
-    if ($null -eq $settings.PSObject.Properties["plugins"] -or $null -eq $settings.plugins) {
+    if ($null -eq $settings.PSObject.Properties["plugins"] -or $settings.plugins -isnot [pscustomobject]) {
       Set-JsonProperty -Object $settings -Name "plugins" -Value ([pscustomobject]@{})
     }
     $plugins = $settings.plugins
