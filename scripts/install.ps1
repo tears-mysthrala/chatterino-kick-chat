@@ -50,7 +50,31 @@ function Assert-ChatterinoClosed {
     $running = @(Get-Process -Name "chatterino" -ErrorAction SilentlyContinue)
   } while ($running.Count -gt 0 -and [DateTime]::UtcNow -lt $deadline)
   if ($running.Count -gt 0) {
+    $background = @($running | Where-Object { $_.MainWindowHandle -eq 0 })
+    if ($background.Count -gt 0) {
+      Write-Host "Stopping Chatterino background processes left after its windows closed..."
+      foreach ($process in $background) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
+      $deadline = [DateTime]::UtcNow.AddSeconds(5)
+      do {
+        Start-Sleep -Milliseconds 250
+        $running = @(Get-Process -Name "chatterino" -ErrorAction SilentlyContinue)
+      } while ($running.Count -gt 0 -and [DateTime]::UtcNow -lt $deadline)
+    }
+  }
+  if ($running.Count -gt 0) {
     throw "Chatterino did not close. Close it manually and run the installer again."
+  }
+}
+
+function Get-FileSha256 {
+  param([string]$Path)
+  $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+  $sha256 = [Security.Cryptography.SHA256]::Create()
+  try {
+    return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "")
+  } finally {
+    $sha256.Dispose()
+    $stream.Dispose()
   }
 }
 
@@ -60,7 +84,7 @@ function Get-DataFingerprint {
   return @(
     Get-ChildItem -LiteralPath $DataPath -File -Recurse -Force | Sort-Object FullName | ForEach-Object {
       $relative = $_.FullName.Substring($DataPath.Length).TrimStart('\', '/')
-      "{0}  {1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash, $relative
+      "{0}  {1}" -f (Get-FileSha256 -Path $_.FullName), $relative
     }
   )
 }

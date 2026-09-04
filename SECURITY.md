@@ -41,7 +41,8 @@ verified against the published SHA-256 checksum.
 On Windows, `install-or-update.cmd` invokes the operating system's bundled
 Windows PowerShell with an execution-policy bypass limited to that installer
 process. It does not change the user or machine policy and does not require
-administrator access. The installer closes Chatterino before changing settings,
+administrator access. The installer requests a normal Chatterino shutdown and
+stops only background processes left without a window before changing settings,
 moves the previous plugin and settings to a recoverable backup outside the
 active `Plugins` directory, preserves and hashes `data/`, enables plugin support
 and this plugin, and restores the previous installation if an update fails.

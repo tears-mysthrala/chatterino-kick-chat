@@ -5,7 +5,7 @@
   "authors": ["tears-mysthrala"],
   "homepage": "https://github.com/tears-mysthrala/chatterino-kick-chat",
   "tags": ["commands", "utility", "kick", "chat"],
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
   "permissions": [
     { "type": "Network" },

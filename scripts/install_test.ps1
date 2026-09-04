@@ -8,6 +8,10 @@ function New-TestDirectory {
 
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $sourceInstaller = Join-Path $PSScriptRoot "install.ps1"
+$installSource = Get-Content -LiteralPath $sourceInstaller -Raw
+if ($installSource.Contains('Get-FileHash')) { throw "Installer data verification must not depend on Get-FileHash" }
+if (-not $installSource.Contains('$_.MainWindowHandle -eq 0')) { throw "Installer must identify background-only Chatterino processes" }
+if (-not $installSource.Contains('Stop-Process -Id $process.Id -Force')) { throw "Installer must stop residual background Chatterino processes" }
 $sandbox = Join-Path ([IO.Path]::GetTempPath()) ("kick-installer-test-" + [Guid]::NewGuid().ToString("N"))
 $packageRoot = Join-Path $sandbox "package[release]"
 $installer = Join-Path $packageRoot "scripts\install.ps1"
