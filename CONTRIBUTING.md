@@ -45,10 +45,28 @@ disableable and must never download or install an update automatically.
 1. Add a redacted fixture for any new or changed upstream event.
 2. Add normalization and malformed-input regression tests.
 3. Test behavior with the overlay available and unavailable.
-4. Run the repository's complete test/package scripts.
+4. Run the complete checks:
+   - `scripts/test.sh`
+   - On Windows only: `& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
+   - Verify reproducible packaging with the commands below.
 5. Update compatibility and release notes when behavior changes.
+
+Release pull requests must update `info.json` and `docs/release-notes.md`.
+Metadata stores the bare version; release tags add a leading `v`, and CI strips
+that prefix before requiring an exact match. The release ZIP must contain
+`install-or-update.cmd`, `scripts/install.ps1`, the plugin files, `LICENSE` and
+`SECURITY.md`.
+
+```bash
+VERSION="$(jq -r .version info.json)"
+scripts/build_release.sh "$VERSION"
+HASH1="$(sha256sum "dist/chatterino-kick-chat-$VERSION.zip" | cut -d' ' -f1)"
+scripts/build_release.sh "$VERSION"
+HASH2="$(sha256sum "dist/chatterino-kick-chat-$VERSION.zip" | cut -d' ' -f1)"
+test "$HASH1" = "$HASH2"
+```
 
 Pull requests must state the observed upstream payload, security/privacy impact,
 fallback behavior and exact checks performed. Never include credentials, private
-chat exports or unrelated generated files.
-
+chat exports or unrelated generated files. Release pull requests must also
+explain how installation and later updates work after merge.

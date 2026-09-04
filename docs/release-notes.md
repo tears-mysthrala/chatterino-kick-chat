@@ -1,26 +1,38 @@
-# chatterino-kick-chat 0.3.1
+# chatterino-kick-chat 0.3.2
 
-- Detects silent or half-open Pusher connections with the server-provided
-  activity timeout and an application-level ping/pong watchdog.
-- Preserves consecutive failure counts across replacement sockets so reconnect
-  delays back off from 1 second to a maximum of 30 seconds.
-- Reports `connecting`, `connected` and `reconnecting` accurately through
-  `/kick-chat status`; a WebSocket object is no longer treated as connected
-  before the Pusher handshake completes.
-- Shows the last Pusher or subscription error in `/kick-chat status`. Explicit
-  permanent Pusher errors stop unchanged retries, while explicit immediate
-  reconnect errors bypass backoff. Generic closes remain bounded by backoff
-  because Chatterino's Lua callback does not expose the WebSocket close code.
+This release adds a safe one-click Windows installer and updater. Chat behavior
+is unchanged.
 
-# chatterino-kick-chat 0.3.0
+## Install or update on Windows
 
-Adds broadcast-session metadata for viewing streaks in the multichat overlay.
+1. Download `chatterino-kick-chat-0.3.2.zip` and its matching `.sha256`
+   file from this release.
+2. Before extraction, open PowerShell in the download folder and run
+   `(Get-FileHash .\chatterino-kick-chat-0.3.2.zip -Algorithm SHA256).Hash`.
+3. Compare the result with the hash in the `.sha256` file. Continue only when
+   they match.
+4. Select **Extract all** in File Explorer.
+5. Double-click `install-or-update.cmd` in the extracted folder. Do not run it
+   as administrator.
+6. Reopen Chatterino and run `/kick-chat status`.
 
-- The overlay receives the active Kick livestream ID and channel slug.
-- Livestream state is refreshed while connected and cleared when the channel
-  goes offline, preventing a later broadcast from reusing an ended session.
-- Existing chat rendering, persistent bindings and automatic reconnection are
-  unchanged.
+The launcher uses the Windows PowerShell already included with Windows. Its
+execution-policy bypass applies only to the installer process. The installer
+closes Chatterino normally, creates a recoverable backup under
+`%APPDATA%\Chatterino2\PluginBackups`, preserves and hashes the plugin's `data/`
+directory, migrates compatible data from older versioned plugin folders,
+enables plugin support and this plugin, and restores the previous installation
+if an update fails.
 
-Download the ZIP, verify its SHA-256 file and extract it into Chatterino's
-`Plugins` directory as `chatterino-kick-chat`.
+## From this release onward
+
+Future Windows updates use the same flow: download, verify, extract, and
+double-click `install-or-update.cmd`. No files need to be copied into
+Chatterino by hand. Update notifications remain advisory: they may link to a
+stable GitHub release, but they never download, extract, replace, or execute an
+update automatically. macOS and Linux installations remain manual.
+
+## Assets
+
+- `chatterino-kick-chat-0.3.2.zip`
+- `chatterino-kick-chat-0.3.2.zip.sha256`
