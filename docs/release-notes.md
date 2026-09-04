@@ -10,6 +10,8 @@ Windows PowerShell script execution. Chat behavior is unchanged.
    file from this release.
 2. Before extraction, open PowerShell in the download folder and run
    `(Get-FileHash .\chatterino-kick-chat-0.3.3.zip -Algorithm SHA256).Hash`.
+   If that command is unavailable, run
+   `certutil -hashfile .\chatterino-kick-chat-0.3.3.zip SHA256`.
 3. Compare the result with the hash in the `.sha256` file. Continue only when
    they match.
 4. Select **Extract all** in File Explorer.

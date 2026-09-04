@@ -68,6 +68,10 @@ window, type ` -Algorithm SHA256`, and press Enter. The displayed **Hash** must
 match the sequence in the `.sha256` file; uppercase and lowercase do not
 matter. This command only reads the file.
 
+If PowerShell says that `Get-FileHash` is unavailable, type
+`certutil -hashfile `, drag the ZIP into the window, type ` SHA256`, and press
+Enter. Compare the resulting hash in the same way.
+
 ## Updating without losing saved channels
 
 Download and extract the new release, then double-click

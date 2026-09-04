@@ -68,13 +68,15 @@ function Assert-ChatterinoClosed {
 
 function Get-FileSha256 {
   param([string]$Path)
-  $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
-  $sha256 = [Security.Cryptography.SHA256]::Create()
+  $stream = $null
+  $sha256 = $null
   try {
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    $sha256 = [Security.Cryptography.SHA256]::Create()
     return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "")
   } finally {
-    $sha256.Dispose()
-    $stream.Dispose()
+    if ($null -ne $sha256) { $sha256.Dispose() }
+    if ($null -ne $stream) { $stream.Dispose() }
   }
 }
 
