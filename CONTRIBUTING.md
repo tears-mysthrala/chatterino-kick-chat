@@ -45,10 +45,19 @@ disableable and must never download or install an update automatically.
 1. Add a redacted fixture for any new or changed upstream event.
 2. Add normalization and malformed-input regression tests.
 3. Test behavior with the overlay available and unavailable.
-4. Run the repository's complete test/package scripts.
+4. Run the complete checks:
+   - `scripts/test.sh`
+   - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install_test.ps1`
+   - `scripts/build_release.sh "$(jq -r .version info.json)"` twice and compare
+     the resulting ZIP hashes.
 5. Update compatibility and release notes when behavior changes.
+
+Release pull requests must update `info.json` and `docs/release-notes.md`. The
+tag must match the metadata version exactly. The release ZIP must contain
+`install-or-update.cmd`, `scripts/install.ps1`, the plugin files, `LICENSE` and
+`SECURITY.md`.
 
 Pull requests must state the observed upstream payload, security/privacy impact,
 fallback behavior and exact checks performed. Never include credentials, private
-chat exports or unrelated generated files.
-
+chat exports or unrelated generated files. Release pull requests must also
+explain how installation and later updates work after merge.

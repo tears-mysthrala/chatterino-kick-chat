@@ -49,3 +49,9 @@ jobs:
           path: |
             dist/chatterino-kick-chat-${{ env.VERSION }}.zip
             dist/chatterino-kick-chat-${{ env.VERSION }}.zip.sha256
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - shell: powershell
+        run: .\scripts\install_test.ps1
